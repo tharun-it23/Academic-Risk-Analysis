@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <!-- Prevent Tomcat from scanning multi-release JARs that contain Java 9+ module-info.class -->
+    <JarScanner>
+        <JarScanFilter
+            pluggabilitySkip="gson-*.jar,sqlite-jdbc-*.jar,jjwt-*.jar,jaxb-api-*.jar"
+            tldSkip="gson-*.jar,sqlite-jdbc-*.jar,jjwt-*.jar,jaxb-api-*.jar" />
+    </JarScanner>
+</Context>

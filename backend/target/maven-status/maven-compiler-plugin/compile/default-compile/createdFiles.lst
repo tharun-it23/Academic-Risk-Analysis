@@ -1,0 +1,12 @@
+com\academicrisks\filter\CorsFilter.class
+com\academicrisks\util\JsonUtil.class
+com\academicrisks\dao\StudentDAO.class
+com\academicrisks\model\User.class
+com\academicrisks\dao\DatabaseInitializer.class
+com\academicrisks\servlet\StudentsServlet.class
+com\academicrisks\servlet\StudentStatsServlet.class
+com\academicrisks\filter\AuthFilter.class
+com\academicrisks\util\JwtUtil.class
+com\academicrisks\servlet\AuthServlet.class
+com\academicrisks\dao\UserDAO.class
+com\academicrisks\model\Student.class
