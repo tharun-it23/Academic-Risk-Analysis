@@ -61,6 +61,21 @@ public class StudentDAO {
         return null;
     }
 
+    public Student findByRollNo(String rollNo) {
+        String sql = "SELECT * FROM students WHERE roll_no = ?";
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, rollNo);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public Student create(Student student) {
         String sql = "INSERT INTO students (name, roll_no, department, risk_status, semester, gpa, attendance, email, phone, year, address, backlogs) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -107,6 +122,32 @@ public class StudentDAO {
         try (Connection conn = DatabaseInitializer.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean update(Student student) {
+        String sql = "UPDATE students SET name = ?, roll_no = ?, department = ?, risk_status = ?, semester = ?, " +
+                     "gpa = ?, attendance = ?, email = ?, phone = ?, year = ?, address = ?, backlogs = ? " +
+                     "WHERE id = ?";
+        try (Connection conn = DatabaseInitializer.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, student.getName());
+            ps.setString(2, student.getRollNo());
+            ps.setString(3, student.getDepartment());
+            ps.setString(4, student.getRiskStatus() != null ? student.getRiskStatus() : calculateRisk(student.getGpa(), student.getAttendance()));
+            ps.setInt(5, student.getSemester());
+            ps.setDouble(6, student.getGpa());
+            ps.setDouble(7, student.getAttendance());
+            ps.setString(8, student.getEmail());
+            ps.setString(9, student.getPhone());
+            ps.setInt(10, student.getYear());
+            ps.setString(11, student.getAddress());
+            ps.setInt(12, student.getBacklogs());
+            ps.setInt(13, student.getId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,17 +206,21 @@ public class StudentDAO {
 
                 PreparedStatement ps = conn.prepareStatement(
                     "SELECT " +
+                    "  COUNT(*) as total, " +
                     "  SUM(CASE WHEN risk_status = 'High' THEN 1 ELSE 0 END) as highRisk, " +
                     "  SUM(CASE WHEN risk_status = 'Medium' THEN 1 ELSE 0 END) as mediumRisk, " +
-                    "  SUM(CASE WHEN risk_status = 'Low' THEN 1 ELSE 0 END) as lowRisk " +
+                    "  SUM(CASE WHEN risk_status = 'Low' THEN 1 ELSE 0 END) as lowRisk, " +
+                    "  AVG(CASE WHEN risk_status = 'High' THEN 5 WHEN risk_status = 'Medium' THEN 3 ELSE 1 END) as avgRiskScore " +
                     "FROM students WHERE department = ?"
                 );
                 ps.setString(1, dept);
                 ResultSet drs = ps.executeQuery();
                 if (drs.next()) {
+                    deptStats.put("total", drs.getInt("total"));
                     deptStats.put("highRisk", drs.getInt("highRisk"));
                     deptStats.put("mediumRisk", drs.getInt("mediumRisk"));
                     deptStats.put("lowRisk", drs.getInt("lowRisk"));
+                    deptStats.put("avgRiskScore", drs.getDouble("avgRiskScore"));
                 }
                 departments.add(deptStats);
                 ps.close();

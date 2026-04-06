@@ -6,8 +6,10 @@ import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import api from '../config/api';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '@/styles/calendar-theme.css';
 import { Card } from "@heroui/react";
 import { Spinner } from "@heroui/react";
+import { CalendarDays } from 'lucide-react';
 
 const locales = {
     'en-US': enUS,
@@ -114,7 +116,7 @@ const CalendarView = () => {
         <Card className="shadow-sm">
             <Card.Header className="flex justify-between items-center px-6 py-4 border-b border-default-200">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    📅 Academic Schedule
+                    <CalendarDays size={22} className="text-indigo-500" /> Academic Schedule
                 </h2>
                 <div className="flex gap-4 text-xs sm:text-sm">
                     <div className="flex items-center gap-1.5">

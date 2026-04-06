@@ -9,14 +9,22 @@ import RiskDistributionWidget from '@/components/RiskDistributionWidget';
 import MonthlyRiskAnalytics from '@/components/MonthlyRiskAnalytics';
 import DepartmentComparisonWidget from '@/components/DepartmentComparisonWidget';
 import ActivityLog from '@/components/ActivityLog';
+import ExportButton from '@/components/ExportButton';
 import {
     Users,
     AlertTriangle,
     GraduationCap,
     Plus,
+    TrendingUp,
+    Calendar,
+    ChevronRight,
+    Bell,
 } from 'lucide-react';
 import { Button } from "@heroui/react";
 import { Spinner } from "@heroui/react";
+import { useDisclosure } from "@heroui/use-disclosure";
+import { SendNotificationModal } from '@/components/SendNotificationModal';
+import NotificationSection from '@/components/NotificationSection';
 
 interface Student {
     _id: string;
@@ -41,62 +49,97 @@ export default function AdminDashboard() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [stats, setStats] = useState<Stats | null>(null);
+    const [monthlyStats, setMonthlyStats] = useState<any[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
+    const [notifRefresh, setNotifRefresh] = useState(0);
 
-    // Initial Data Fetch
+    const { isOpen: isNotifOpen, onOpen: onNotifOpen, onOpenChange: onNotifOpenChange } = useDisclosure();
+
     useEffect(() => {
-        if (!authLoading && !user) {
-            router.push('/');
-            return;
-        }
+        if (!authLoading && !user) { router.push('/'); return; }
 
         const fetchData = async () => {
             try {
-                try {
-                    const [statsRes] = await Promise.all([
-                        api.get('/students/stats')
-                    ]);
-                    setStats(statsRes.data);
-                } catch (apiError) {
-                    console.error("API Fetch Failed, using fallback?", apiError);
-                }
-                setLoading(false);
+                const [statsRes, monthlyRes, studentsRes] = await Promise.all([
+                    api.get('/students/stats'),
+                    api.get('/students/stats/monthly'),
+                    api.get('/students')
+                ]);
+                setStats(statsRes.data);
+                setMonthlyStats(monthlyRes.data.departments || []);
+                setStudents(studentsRes.data || []);
             } catch (err) {
-                console.error(err);
+                console.error("API Fetch Failed", err);
+            } finally {
                 setLoading(false);
             }
         };
 
-        if (user) {
-            fetchData();
-        }
+        if (user) fetchData();
     }, [user, authLoading, router]);
 
     if (authLoading || loading) {
-        return <div className="flex h-screen items-center justify-center"><Spinner size="lg" /></div>;
+        return (
+            <div className="flex h-[80vh] items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Spinner size="lg" />
+                    <p className="text-sm text-slate-400 dark:text-slate-500">Loading dashboard...</p>
+                </div>
+            </div>
+        );
     }
 
+    const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
     return (
-        <main className="container mx-auto p-6 space-y-8">
-            {/* Welcome Section */}
-            <div className="flex justify-between items-center">
+        <div className="space-y-6 animate-slide-up">
+
+            {/* ── Page Header ── */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Dashboard Overview</h1>
-                    <p className="text-slate-600 dark:text-slate-400">Welcome back, Administrator</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                            Overview
+                        </span>
+                    </div>
+                    <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--foreground)' }}>
+                        Dashboard
+                    </h1>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1.5">
+                        <Calendar size={13} />
+                        {today}
+                    </p>
                 </div>
-                <Button >
-                    <Plus size={18} />  Add New Student
-                </Button>
+                <div className="flex items-center gap-2">
+                    <ExportButton data={students} filename="All_Students" />
+                    <button
+                        onClick={onNotifOpen}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98] shadow-sm"
+                    >
+                        <Bell size={16} className="text-indigo-500" /> Send Alert
+                    </button>
+                    <button
+                        onClick={() => router.push('/admin/students')}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                        style={{
+                            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                            boxShadow: '0 4px 14px rgba(79,70,229,0.35)',
+                        }}
+                    >
+                        <Plus size={16} /> Add Student
+                    </button>
+                </div>
             </div>
 
-            {/* KPI Cards */}
+            {/* ── KPI Cards ── */}
             {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <KPICard
                         title="Total Students"
                         value={stats.totalStudents}
                         icon={<Users />}
-                        color="blue"
+                        color="indigo"
                         subtitle="Registered in system"
                     />
                     <KPICard
@@ -110,7 +153,7 @@ export default function AdminDashboard() {
                     <KPICard
                         title="Avg Attendance"
                         value={`${stats.avgAttendance?.toFixed(1)}%`}
-                        icon={<Users />}
+                        icon={<TrendingUp />}
                         color="emerald"
                     />
                     <KPICard
@@ -122,20 +165,65 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {/* Recent Activity / Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ── Risk Summary Bar ── */}
+            {stats && (
+                <div className="rounded-2xl p-5"
+                    style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Risk Overview</p>
+                            <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--foreground)' }}>
+                                {stats.totalStudents} students total
+                            </p>
+                        </div>
+                        <a href="/admin/students" className="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-600 transition-colors">
+                            View all <ChevronRight size={14} />
+                        </a>
+                    </div>
+                    <div className="flex rounded-full overflow-hidden h-3 gap-0.5">
+                        {[
+                            { val: stats.highRisk, color: '#ef4444' },
+                            { val: stats.mediumRisk, color: '#f59e0b' },
+                            { val: stats.lowRisk, color: '#10b981' },
+                        ].map((seg, i) => {
+                            const pct = stats.totalStudents > 0 ? (seg.val / stats.totalStudents) * 100 : 0;
+                            return pct > 0 ? (
+                                <div key={i} className="rounded-full transition-all duration-700"
+                                    style={{ width: `${pct}%`, background: seg.color }} />
+                            ) : null;
+                        })}
+                    </div>
+                    <div className="flex gap-6 mt-3">
+                        {[
+                            { label: 'High', val: stats.highRisk, color: '#ef4444' },
+                            { label: 'Medium', val: stats.mediumRisk, color: '#f59e0b' },
+                            { label: 'Low', val: stats.lowRisk, color: '#10b981' },
+                        ].map((s, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
+                                <span className="text-xs text-slate-500 dark:text-slate-400">{s.label}: <b className="text-slate-700 dark:text-slate-300">{s.val}</b></span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Charts Grid ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                <div className="lg:col-span-1">
+                    <NotificationSection key={notifRefresh} />
+                </div>
                 <RiskDistributionWidget stats={stats} />
                 <ActivityLog />
-
-                <DepartmentComparisonWidget departmentStats={[
-                    { _id: 'CSE', total: 120, highRisk: 15, avgRiskScore: 3.5 },
-                    { _id: 'ECE', total: 100, highRisk: 10, avgRiskScore: 2.8 },
-                    { _id: 'MECH', total: 90, highRisk: 20, avgRiskScore: 4.2 },
-                    { _id: 'CIVIL', total: 80, highRisk: 8, avgRiskScore: 2.5 },
-                    { _id: 'EEE', total: 70, highRisk: 12, avgRiskScore: 3.8 }
-                ]} />
+                <DepartmentComparisonWidget departmentStats={monthlyStats} />
                 <MonthlyRiskAnalytics />
             </div>
-        </main>
+
+            <SendNotificationModal 
+                isOpen={isNotifOpen} 
+                onOpenChange={onNotifOpenChange} 
+                onSuccess={() => setNotifRefresh(prev => prev + 1)} 
+            />
+        </div>
     );
 }

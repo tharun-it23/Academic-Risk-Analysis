@@ -1,4 +1,3 @@
-import { Card } from "@heroui/react";
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface KPICardProps {
@@ -12,50 +11,70 @@ interface KPICardProps {
 }
 
 const KPICard = ({ title, value, subtitle, trend, trendValue, icon, color = 'blue' }: KPICardProps) => {
-    const colorClasses = {
-        blue: 'from-blue-500 to-blue-600',
-        emerald: 'from-emerald-500 to-emerald-600',
-        amber: 'from-amber-500 to-amber-600',
-        red: 'from-red-500 to-red-600',
-        purple: 'from-purple-500 to-purple-600',
-        indigo: 'from-indigo-500 to-indigo-600',
+    const colorConfig = {
+        blue:    { gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)', glow: 'rgba(59,130,246,0.25)', light: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.15)' },
+        emerald: { gradient: 'linear-gradient(135deg, #10b981, #059669)', glow: 'rgba(16,185,129,0.25)', light: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.15)' },
+        amber:   { gradient: 'linear-gradient(135deg, #f59e0b, #d97706)', glow: 'rgba(245,158,11,0.25)', light: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.15)' },
+        red:     { gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', glow: 'rgba(239,68,68,0.25)', light: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.15)' },
+        purple:  { gradient: 'linear-gradient(135deg, #a855f7, #9333ea)', glow: 'rgba(168,85,247,0.25)', light: 'rgba(168,85,247,0.08)', border: 'rgba(168,85,247,0.15)' },
+        indigo:  { gradient: 'linear-gradient(135deg, #6366f1, #4f46e5)', glow: 'rgba(99,102,241,0.25)', light: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.15)' },
     };
+
+    const c = colorConfig[color];
 
     const getTrendIcon = () => {
-        if (trend === 'up') return <TrendingUp className="w-4 h-4" />;
-        if (trend === 'down') return <TrendingDown className="w-4 h-4" />;
-        return <Minus className="w-4 h-4" />;
+        if (trend === 'up') return <TrendingUp className="w-3 h-3" />;
+        if (trend === 'down') return <TrendingDown className="w-3 h-3" />;
+        return <Minus className="w-3 h-3" />;
     };
 
-    const getTrendColor = () => {
-        if (trend === 'up') return 'text-emerald-600';
-        if (trend === 'down') return 'text-red-600';
-        return 'text-slate-600 dark:text-slate-400';
+    const getTrendStyle = (): React.CSSProperties => {
+        if (trend === 'up') return { color: '#10b981', background: 'rgba(16,185,129,0.1)' };
+        if (trend === 'down') return { color: '#ef4444', background: 'rgba(239,68,68,0.1)' };
+        return { color: '#94a3b8', background: 'rgba(148,163,184,0.1)' };
     };
 
     return (
-        <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300">
-            <Card.Content className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-default-500 mb-1">{title}</p>
-                        <h3 className="text-3xl font-bold text-default-900">{value}</h3>
-                        {subtitle && <p className="text-xs text-default-400 mt-1">{subtitle}</p>}
-                    </div>
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]} shadow-md`}>
-                        <span className="text-2xl text-white">{icon}</span>
-                    </div>
+        <div className="dashboard-card rounded-2xl p-5 group cursor-default"
+            style={{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+            }}>
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex-1 min-w-0 pr-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+                        {title}
+                    </p>
+                    <p className="text-3xl font-bold tracking-tight" style={{ color: 'var(--foreground)' }}>
+                        {value}
+                    </p>
+                    {subtitle && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{subtitle}</p>
+                    )}
                 </div>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                        background: c.gradient,
+                        boxShadow: `0 6px 20px ${c.glow}`,
+                    }}>
+                    <span className="text-white [&>svg]:w-[18px] [&>svg]:h-[18px]">{icon}</span>
+                </div>
+            </div>
 
-                {trendValue && (
-                    <div className={`flex items-center gap-1 text-sm font-medium ${getTrendColor()}`}>
-                        {getTrendIcon()}
-                        <span>{trendValue}</span>
-                        <span className="text-default-400 text-xs ml-1">vs last month</span>
-                    </div>
-                )}
-            </Card.Content>
-        </Card>
+            {/* Trend badge */}
+            {trendValue && (
+                <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit"
+                    style={getTrendStyle()}>
+                    {getTrendIcon()}
+                    <span>{trendValue}</span>
+                    <span className="font-normal opacity-70">vs last month</span>
+                </div>
+            )}
+
+            {/* Bottom accent bar */}
+            <div className="mt-4 h-[2px] rounded-full opacity-30"
+                style={{ background: c.gradient }} />
+        </div>
     );
 };
 

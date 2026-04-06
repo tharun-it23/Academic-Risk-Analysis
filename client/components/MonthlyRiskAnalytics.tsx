@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react';
 import api from '../config/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, Label, ListBox, Select } from "@heroui/react";
-import { BarChart2, Calendar, AlertTriangle } from 'lucide-react';
+import { BarChart2, ChevronDown } from 'lucide-react';
 
 const MonthlyRiskAnalytics = () => {
     const currentDate = new Date();
-    const [selectedMonth, setSelectedMonth] = useState(new Set([String(currentDate.getMonth() + 1)]));
-    const [selectedYear, setSelectedYear] = useState(new Set([String(currentDate.getFullYear())]));
+    const [selectedMonth, setSelectedMonth] = useState(String(currentDate.getMonth() + 1));
+    const [selectedYear, setSelectedYear] = useState(String(currentDate.getFullYear()));
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -29,8 +28,7 @@ const MonthlyRiskAnalytics = () => {
         { value: "12", label: 'December' }
     ];
 
-    // Generate year options
-    const years = [];
+    const years: { value: string; label: string }[] = [];
     for (let year = 2020; year <= currentDate.getFullYear() + 1; year++) {
         years.push({ value: String(year), label: String(year) });
     }
@@ -39,14 +37,11 @@ const MonthlyRiskAnalytics = () => {
         setLoading(true);
         setError(null);
         try {
-            const monthVal = Array.from(selectedMonth)[0];
-            const yearVal = Array.from(selectedYear)[0];
-            const res = await api.get(`/students/stats/monthly?month=${monthVal}&year=${yearVal}`);
+            const res = await api.get(`/students/stats/monthly?month=${selectedMonth}&year=${selectedYear}`);
             setData(res.data.departments || []);
         } catch (err) {
             console.error(err);
             setError('Failed to fetch monthly data');
-            // Fallback Mock Data for demo
             setData([
                 { name: 'CSE', highRisk: 5, mediumRisk: 10, lowRisk: 40 },
                 { name: 'ECE', highRisk: 3, mediumRisk: 8, lowRisk: 35 },
@@ -62,84 +57,73 @@ const MonthlyRiskAnalytics = () => {
     }, [selectedMonth, selectedYear]);
 
     return (
-        <Card className="min-h-[400px] h-full">
-            <Card.Header className="flex flex-col items-start gap-4">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                    <BarChart2 size={24} className="text-blue-500" />
-                    Monthly Risk Analytics
-                </h3>
-                <div className="flex gap-4 w-full max-w-md">
-                    <Select className="w-full max-w-xs" placeholder="Select Month">
-                        <Label>Month</Label>
-                        <Select.Trigger>
-                            <Select.Value>{months.find(m => m.value === Array.from(selectedMonth)[0])?.label}</Select.Value>
-                            <Select.Indicator />
-                        </Select.Trigger>
-                        <Select.Popover>
-                            <ListBox 
-                                selectionMode="single" 
-                                selectedKeys={selectedMonth} 
-                                onSelectionChange={(keys) => setSelectedMonth(keys as Set<string>)}
-                            >
-                                {months.map((month) => (
-                                    <ListBox.Item key={month.value} id={month.value} textValue={month.label}>
-                                        {month.label}
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-                                ))}
-                            </ListBox>
-                        </Select.Popover>
-                    </Select>
-
-                    <Select className="w-full max-w-xs" placeholder="Select Year">
-                        <Label>Year</Label>
-                        <Select.Trigger>
-                            <Select.Value>{Array.from(selectedYear)[0]}</Select.Value>
-                            <Select.Indicator />
-                        </Select.Trigger>
-                        <Select.Popover>
-                            <ListBox 
-                                selectionMode="single" 
-                                selectedKeys={selectedYear} 
-                                onSelectionChange={(keys) => setSelectedYear(keys as Set<string>)}
-                            >
-                                {years.map((year) => (
-                                    <ListBox.Item key={year.value} id={year.value} textValue={year.label}>
-                                        {year.label}
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-                                ))}
-                            </ListBox>
-                        </Select.Popover>
-                    </Select>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm overflow-hidden h-full">
+            <div className="p-5 pb-3 space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                        <BarChart2 size={16} className="text-purple-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Monthly Risk Analytics</h3>
                 </div>
-            </Card.Header>
-            <Card.Content>
-                {loading ? (
-                    <div className="flex h-[300px] items-center justify-center">Loading...</div>
-                ) : (
-                    <div className="h-[350px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                                data={data}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                <div className="flex gap-3 max-w-md">
+                    {/* Month Select */}
+                    <div className="relative w-full max-w-[180px]">
+                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Month</label>
+                        <div className="relative">
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="w-full appearance-none px-3 py-2 pr-8 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-400 transition-colors cursor-pointer"
                             >
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="name" stroke="#64748b" />
-                                <YAxis stroke="#64748b" />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px' }}
-                                />
+                                {months.map((m) => (
+                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    {/* Year Select */}
+                    <div className="relative w-full max-w-[120px]">
+                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Year</label>
+                        <div className="relative">
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                className="w-full appearance-none px-3 py-2 pr-8 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-400 transition-colors cursor-pointer"
+                            >
+                                {years.map((y) => (
+                                    <option key={y.value} value={y.value}>{y.label}</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="px-5 pb-5">
+                {loading ? (
+                    <div className="flex h-[300px] items-center justify-center">
+                        <div className="w-6 h-6 border-2 border-purple-200 border-t-purple-500 rounded-full animate-spin"></div>
+                    </div>
+                ) : (
+                    <div className="h-[320px] w-full">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                            <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', fontSize: '13px' }} />
                                 <Legend />
-                                <Bar dataKey="highRisk" name="High Risk" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="mediumRisk" name="Medium Risk" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="lowRisk" name="Low Risk" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="highRisk" name="High Risk" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                                <Bar dataKey="mediumRisk" name="Medium Risk" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                                <Bar dataKey="lowRisk" name="Low Risk" fill="#10b981" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 )}
-            </Card.Content>
-        </Card>
+            </div>
+        </div>
     );
 };
 

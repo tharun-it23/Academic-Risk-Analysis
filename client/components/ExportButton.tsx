@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -16,15 +15,9 @@ const ExportButton = ({ data, filename, type = 'excel' }: ExportButtonProps) => 
             alert('No data to export');
             return;
         }
-
-        // Create worksheet
         const ws = XLSX.utils.json_to_sheet(data);
-
-        // Create workbook
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Data');
-
-        // Save file
         XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
@@ -33,13 +26,9 @@ const ExportButton = ({ data, filename, type = 'excel' }: ExportButtonProps) => 
             alert('No data to export');
             return;
         }
-
-        // Convert to CSV
         const headers = Object.keys(data[0]).join(',');
         const rows = data.map(row => Object.values(row).join(','));
         const csv = [headers, ...rows].join('\n');
-
-        // Download
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -50,23 +39,18 @@ const ExportButton = ({ data, filename, type = 'excel' }: ExportButtonProps) => 
     };
 
     const handleExport = () => {
-        if (type === 'excel') {
-            exportToExcel();
-        } else if (type === 'csv') {
-            exportToCSV();
-        }
+        if (type === 'excel') exportToExcel();
+        else exportToCSV();
     };
 
     return (
-        <Button
-            size="sm"
-            color="success"
-            variant="flat"
-            startContent={type === 'excel' ? <FileSpreadsheet size={18} /> : <FileText size={18} />}
-            onPress={handleExport}
+        <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/40 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-200"
         >
+            {type === 'excel' ? <FileSpreadsheet size={16} /> : <FileText size={16} />}
             Export {type === 'excel' ? 'Excel' : 'CSV'}
-        </Button>
+        </button>
     );
 };
 

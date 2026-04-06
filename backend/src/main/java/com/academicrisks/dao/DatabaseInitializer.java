@@ -2,23 +2,36 @@ package com.academicrisks.dao;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+@WebListener
 public class DatabaseInitializer implements ServletContextListener {
 
-    private static final String DB_DIR = System.getProperty("user.dir") + File.separator + "data";
-    private static final String DB_URL = "jdbc:sqlite:" + DB_DIR + File.separator + "academic_risk.db";
+    private static final String DEFAULT_DB_DIR = System.getProperty("user.dir") + File.separator + "data";
+    private static final String DB_URL_PREFIX = "jdbc:sqlite:";
+    
+    private static String resolveDbUrl() {
+        String envPath = System.getenv("DATABASE_PATH");
+        if (envPath != null && !envPath.isEmpty()) {
+            return DB_URL_PREFIX + envPath;
+        }
+        return DB_URL_PREFIX + DEFAULT_DB_DIR + File.separator + "academic_risk.db";
+    }
+
+    private static final String DB_URL = resolveDbUrl();
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
             // Ensure data directory exists
-            File dir = new File(DB_DIR);
-            if (!dir.exists()) {
+            File dbFile = new File(DB_URL.substring(DB_URL_PREFIX.length()));
+            File dir = dbFile.getParentFile();
+            if (dir != null && !dir.exists()) {
                 dir.mkdirs();
             }
 
@@ -29,10 +42,6 @@ public class DatabaseInitializer implements ServletContextListener {
 
                 // Enable WAL mode for better concurrent access
                 stmt.execute("PRAGMA journal_mode=WAL");
-
-                // Drop existing tables for a fresh start during development
-                stmt.execute("DROP TABLE IF EXISTS users");
-                stmt.execute("DROP TABLE IF EXISTS students");
 
                 // Create users table
                 stmt.execute(
@@ -64,6 +73,28 @@ public class DatabaseInitializer implements ServletContextListener {
                     ")"
                 );
 
+                // Create activity_log table
+                stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS activity_log (" +
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "  type TEXT NOT NULL," +
+                    "  description TEXT NOT NULL," +
+                    "  user_name TEXT NOT NULL," +
+                    "  created_at TEXT DEFAULT (datetime('now'))" +
+                    ")"
+                );
+ 
+                // Create notifications table
+                stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS notifications (" +
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "  message TEXT NOT NULL," +
+                    "  target_group TEXT NOT NULL," + // ALL_STUDENTS, HIGH_RISK_STUDENTS, ALL_FACULTY
+                    "  sender_name TEXT," +
+                    "  created_at TEXT DEFAULT (datetime('now'))" +
+                    ")"
+                );
+
                 // Seed default users (only if table is empty)
                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM users");
                 if (rs.next() && rs.getInt(1) == 0) {
@@ -90,8 +121,19 @@ public class DatabaseInitializer implements ServletContextListener {
         stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('admin', 'admin123', 'admin', 'Administrator')");
         stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('faculty1', 'faculty123', 'faculty', 'Dr. Smith')");
         stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('faculty2', 'faculty123', 'faculty', 'Prof. Johnson')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('student1', 'student123', 'student', 'John Doe')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('student2', 'student123', 'student', 'Jane Smith')");
+        // Student accounts — username = roll number (lowercase)
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CSE001', 'student123', 'student', 'John Doe')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CSE002', 'student123', 'student', 'Jane Smith')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21ECE001', 'student123', 'student', 'Bob Johnson')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21ECE002', 'student123', 'student', 'Alice Brown')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21MECH001', 'student123', 'student', 'Charlie Wilson')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21MECH002', 'student123', 'student', 'Diana Lee')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CIVIL001', 'student123', 'student', 'Eve Davis')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21EEE001', 'student123', 'student', 'Frank Miller')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21IT001', 'student123', 'student', 'Grace Taylor')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CSE003', 'student123', 'student', 'Henry Anderson')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21ECE003', 'student123', 'student', 'Ivy Thomas')");
+        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21MECH003', 'student123', 'student', 'Jack White')");
         System.out.println("[DB] Seeded default users");
     }
 

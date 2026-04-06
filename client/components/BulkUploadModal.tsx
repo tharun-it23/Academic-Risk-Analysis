@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from 'react';
-import { 
-    Modal, 
-    ModalHeader, 
-    ModalBody, 
-    ModalFooter, 
-    Button 
+import {
+    Modal,
+    Button
 } from "@heroui/react";
 import { Upload, FileDown, AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import api from '@/config/api';
 
 interface BulkUploadModalProps {
     isOpen: boolean;
@@ -51,17 +49,20 @@ export const BulkUploadModal = ({ isOpen, onOpenChange, onSuccess }: BulkUploadM
     };
 
     const handleUpload = async (onClose: () => void) => {
-        if (!file) return;
+        if (!file || previewData.length === 0) return;
         setLoading(true);
-        // Simulate API Upload
-        setTimeout(() => {
-            console.log("Uploading data:", previewData);
+        try {
+            await api.post('/students/bulk', previewData);
             setLoading(false);
             if (onSuccess) onSuccess(previewData);
             setFile(null);
             setPreviewData([]);
             onClose();
-        }, 1500);
+        } catch (err: any) {
+            console.error("Bulk upload error:", err);
+            setError(err.response?.data?.msg || "Failed to upload students");
+            setLoading(false);
+        }
     };
 
     const downloadTemplate = () => {
@@ -77,60 +78,64 @@ export const BulkUploadModal = ({ isOpen, onOpenChange, onSuccess }: BulkUploadM
 
     return (
         <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-            <Modal.Container>
-                {(onClose) => (
-                    <>
-                        <ModalHeader className="flex flex-col gap-1">Bulk Upload Students</ModalHeader>
-                        <ModalBody>
-                            <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 bg-slate-50 dark:bg-slate-800/50">
-                                <Upload size={48} className="text-slate-400 mb-4" />
-                                <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">Drag & Drop or Click to Upload Excel File</p>
-                                <input
-                                    type="file"
-                                    accept=".xlsx, .xls"
-                                    onChange={handleFileChange}
-                                    className="block w-full text-sm text-slate-500
-                                    file:mr-4 file:py-2 file:px-4
-                                    file:rounded-full file:border-0
-                                    file:text-sm file:font-semibold
-                                    file:bg-blue-50 file:text-blue-700
-                                    hover:file:bg-blue-100 dark:file:bg-blue-900/40 dark:file:text-blue-300"
-                                />
-                                {file && (
-                                    <p className="mt-2 text-sm text-emerald-600 font-medium">
-                                        Selected: {file.name} ({previewData.length} records)
-                                    </p>
-                                )}
-                                {error && (
-                                    <div className="mt-2 flex items-center gap-2 text-red-500 text-sm">
-                                        <AlertCircle size={16} />
-                                        <span>{error}</span>
-                                    </div>
-                                )}
-                            </div>
+            <Modal.Backdrop>
+                <Modal.Container>
+                    <Modal.Dialog>
+                        <>
+                            <Modal.Header className="flex flex-col gap-1">Bulk Upload Students</Modal.Header>
+                            <Modal.Body>
+                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 bg-slate-50 dark:bg-slate-800/50">
+                                    <Upload size={48} className="text-slate-400 mb-4" />
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">Drag & Drop or Click to Upload Excel File</p>
+                                    <input
+                                        type="file"
+                                        accept=".xlsx, .xls"
+                                        onChange={handleFileChange}
+                                        className="block w-full text-sm text-slate-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-blue-50 file:text-blue-700
+                                        hover:file:bg-blue-100 dark:file:bg-blue-900/40 dark:file:text-blue-300"
+                                    />
+                                    {file && (
+                                        <p className="mt-2 text-sm text-emerald-600 font-medium">
+                                            Selected: {file.name} ({previewData.length} records)
+                                        </p>
+                                    )}
+                                    {error && (
+                                        <div className="mt-2 flex items-center gap-2 text-red-500 text-sm">
+                                            <AlertCircle size={16} />
+                                            <span>{error}</span>
+                                        </div>
+                                    )}
+                                </div>
 
-                            <div className="flex justify-end">
-                                <Button size="sm" variant="ghost" onPress={downloadTemplate}>
-                                <FileDown size={16} />  Download Template
+                                <div className="flex justify-end">
+                                    <Button size="sm" variant="ghost" onPress={downloadTemplate}>
+                                        <FileDown size={16} />  Download Template
+                                    </Button>
+                                </div>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button className="w-full" slot="close" variant="secondary">
+                                    Close
                                 </Button>
-                            </div>
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button variant="ghost" onPress={onClose}>
-                                Cancel
-                            </Button>
-                            <Button
-                                onPress={() => handleUpload(onClose)}
-                                isPending={loading}
-                                isDisabled={!file || previewData.length === 0}
-                                
-                            >
-                              {<Upload size={18} />}  Upload {previewData.length > 0 ? `(${previewData.length})` : ''}
-                            </Button>
-                        </ModalFooter>
-                    </>
-                )}
-            </Modal.Container>
+                                <Button
+                                slot="close"
+                                    onPress={() => handleUpload(onOpenChange)}
+                                    isPending={loading}
+                                    isDisabled={!file || previewData.length === 0}
+
+                                >
+                                    {<Upload size={18} />}  Upload {previewData.length > 0 ? `(${previewData.length})` : ''}
+                                </Button>
+                            </Modal.Footer>
+                        </>
+                    </Modal.Dialog>
+
+                </Modal.Container>
+            </Modal.Backdrop>
         </Modal>
     );
 };

@@ -4,12 +4,14 @@ import com.academicrisks.dao.StudentDAO;
 import com.academicrisks.util.JsonUtil;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
+@WebServlet(urlPatterns = {"/api/students/stats", "/api/students/stats/*"})
 public class StudentStatsServlet extends HttpServlet {
 
     private StudentDAO studentDAO = new StudentDAO();

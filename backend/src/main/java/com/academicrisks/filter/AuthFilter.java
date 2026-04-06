@@ -5,10 +5,12 @@ import com.academicrisks.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 
 import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@WebFilter("/api/*")
 public class AuthFilter implements Filter {
 
     @Override
@@ -24,7 +26,7 @@ public class AuthFilter implements Filter {
         String path = httpRequest.getRequestURI();
 
         // Skip auth for login endpoint and OPTIONS preflight
-        if (path.startsWith("/api/auth") || "OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
+        if (path.equals("/api/auth/login") || "OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
             chain.doFilter(request, response);
             return;
         }

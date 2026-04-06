@@ -8,11 +8,8 @@ import {
     Chip,
     Button,
     Input,
-    Select,
-    Label,
-    ListBox
 } from "@heroui/react";
-import { Search, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
+import { Search, AlertTriangle, Eye, Edit, Trash2, ChevronDown, MessageSquare } from 'lucide-react';
 
 interface Student {
     _id: string;
@@ -32,6 +29,7 @@ interface StudentsTableProps {
     students: Student[];
     isAdmin?: boolean;
     onDelete?: (id: string) => void;
+    onEdit?: (student: Student) => void;
 }
 
 const statusColorMap: Record<string, "danger" | "warning" | "success"> = {
@@ -40,7 +38,7 @@ const statusColorMap: Record<string, "danger" | "warning" | "success"> = {
     Low: "success",
 };
 
-const StudentsTable = ({ students, isAdmin = false, onDelete }: StudentsTableProps) => {
+const StudentsTable = ({ students, isAdmin = false, onDelete, onEdit }: StudentsTableProps) => {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDepartment, setFilterDepartment] = useState('');
@@ -83,52 +81,33 @@ const StudentsTable = ({ students, isAdmin = false, onDelete }: StudentsTablePro
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <Select className="w-full md:w-40" placeholder="All Depts">
-                        <Label>Department</Label>
-                        <Select.Trigger>
-                            <Select.Value>{filterDepartment || "All Depts"}</Select.Value>
-                            <Select.Indicator />
-                        </Select.Trigger>
-                        <Select.Popover>
-                            <ListBox
-                                selectionMode="single"
-                                selectedKeys={filterDepartment ? new Set([filterDepartment]) : new Set([])}
-                                onSelectionChange={(keys) => setFilterDepartment(Array.from(keys)[0] as string || "")}
-                            >
-                                {['CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'AI&DS'].map((dept) => (
-                                    <ListBox.Item key={dept} id={dept} textValue={dept}>
-                                        {dept}
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-                                ))}
-                            </ListBox>
-                        </Select.Popover>
-                    </Select>
+                    <div className="relative w-full md:w-40">
+                        <select
+                            value={filterDepartment}
+                            onChange={(e) => setFilterDepartment(e.target.value)}
+                            className="w-full appearance-none px-3 py-2 pr-8 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors cursor-pointer"
+                        >
+                            <option value="">All Depts</option>
+                            {['CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'AI&DS'].map((dept) => (
+                                <option key={dept} value={dept}>{dept}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
 
-                    <Select className="w-full md:w-40" placeholder="Risk Level">
-                        <Label>Risk Level</Label>
-                        <Select.Trigger>
-                            <Select.Value>{filterRisk || "Risk Level"}</Select.Value>
-                            <Select.Indicator />
-                        </Select.Trigger>
-                        <Select.Popover>
-                            <ListBox
-                                selectionMode="single"
-                                selectedKeys={filterRisk ? new Set([filterRisk]) : new Set([])}
-                                onSelectionChange={(keys) => setFilterRisk(Array.from(keys)[0] as string || "")}
-                            >
-                                {['High', 'Medium', 'Low'].map((risk) => (
-                                    <ListBox.Item key={risk} id={risk} textValue={risk}>
-                                        <div className="flex items-center gap-2">
-                                            <AlertTriangle size={14} />
-                                            {risk}
-                                        </div>
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-                                ))}
-                            </ListBox>
-                        </Select.Popover>
-                    </Select>
+                    <div className="relative w-full md:w-40">
+                        <select
+                            value={filterRisk}
+                            onChange={(e) => setFilterRisk(e.target.value)}
+                            className="w-full appearance-none px-3 py-2 pr-8 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors cursor-pointer"
+                        >
+                            <option value="">Risk Level</option>
+                            {['High', 'Medium', 'Low'].map((risk) => (
+                                <option key={risk} value={risk}>{risk}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
                 </div>
             </div>
 
@@ -139,9 +118,11 @@ const StudentsTable = ({ students, isAdmin = false, onDelete }: StudentsTablePro
                             <Table.Column isRowHeader>NAME</Table.Column>
                             <Table.Column>ROLL NO</Table.Column>
                             <Table.Column>DEPT</Table.Column>
+                            <Table.Column>PHONE</Table.Column>
                             <Table.Column>GPA</Table.Column>
                             <Table.Column>ATTENDANCE</Table.Column>
                             <Table.Column>RISK STATUS</Table.Column>
+                            <Table.Column>ALERT</Table.Column>
                             <Table.Column>ACTIONS</Table.Column>
                         </Table.Header>
                         <Table.Body 
@@ -155,6 +136,7 @@ const StudentsTable = ({ students, isAdmin = false, onDelete }: StudentsTablePro
                                     <Table.Cell>{item.name}</Table.Cell>
                                     <Table.Cell>{item.rollNo}</Table.Cell>
                                     <Table.Cell>{item.department}</Table.Cell>
+                                    <Table.Cell>{item.phone || 'N/A'}</Table.Cell>
                                     <Table.Cell>{item.academics?.gpa}</Table.Cell>
                                     <Table.Cell>{item.academics?.attendance}%</Table.Cell>
                                     <Table.Cell>
@@ -163,13 +145,26 @@ const StudentsTable = ({ students, isAdmin = false, onDelete }: StudentsTablePro
                                         </Chip>
                                     </Table.Cell>
                                     <Table.Cell>
+                                        <Button
+                                            isIconOnly
+                                            size="sm"
+                                            variant="flat"
+                                            color="primary"
+                                            isDisabled={!item.phone}
+                                            onPress={() => item.phone && window.open(`sms:${item.phone}?body=Academic Alert: You have been identified with a ${item.riskStatus} risk status. Please contact your mentor immediately.`)}
+                                            aria-label="Send SMS Alert"
+                                        >
+                                            <MessageSquare size={16} />
+                                        </Button>
+                                    </Table.Cell>
+                                    <Table.Cell>
                                         <div className="flex items-center gap-2">
                                             <Button isIconOnly size="sm" variant="ghost" onPress={() => router.push(`/student-profile/${item._id}`)} aria-label="View Profile">
                                                 <Eye size={18} className="text-slate-500" />
                                             </Button>
                                             {isAdmin && (
                                                 <>
-                                                    <Button isIconOnly size="sm" variant="ghost" onPress={() => console.log('Edit', item._id)} aria-label="Edit Student">
+                                                    <Button isIconOnly size="sm" variant="ghost" onPress={() => onEdit && onEdit(item)} aria-label="Edit Student">
                                                         <Edit size={18} />
                                                     </Button>
                                                     <Button isIconOnly size="sm" variant="danger" onPress={() => onDelete && onDelete(item._id)} aria-label="Delete Student">
@@ -187,11 +182,38 @@ const StudentsTable = ({ students, isAdmin = false, onDelete }: StudentsTablePro
                 {pages > 1 && (
                     <Table.Footer>
                         <div className="flex w-full justify-center">
-                            <Pagination
-                                page={page}
-                                total={pages}
-                                onChange={(p: number) => setPage(p)}
-                            />
+                            <Pagination>
+                                <Pagination.Content>
+                                    <Pagination.Item>
+                                        <Pagination.Previous 
+                                            isDisabled={page === 1} 
+                                            onPress={() => setPage(page - 1)}
+                                        >
+                                            <Pagination.PreviousIcon />
+                                        </Pagination.Previous>
+                                    </Pagination.Item>
+                                    
+                                    {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                                        <Pagination.Item key={p}>
+                                            <Pagination.Link 
+                                                isActive={p === page} 
+                                                onPress={() => setPage(p)}
+                                            >
+                                                {p}
+                                            </Pagination.Link>
+                                        </Pagination.Item>
+                                    ))}
+
+                                    <Pagination.Item>
+                                        <Pagination.Next 
+                                            isDisabled={page === pages} 
+                                            onPress={() => setPage(page + 1)}
+                                        >
+                                            <Pagination.NextIcon />
+                                        </Pagination.Next>
+                                    </Pagination.Item>
+                                </Pagination.Content>
+                            </Pagination>
                         </div>
                     </Table.Footer>
                 )}

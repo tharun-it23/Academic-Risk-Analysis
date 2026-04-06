@@ -1,0 +1,199 @@
+/* ============================================
+   Custom React Big Calendar Theme
+   Premium toolbar buttons & styling
+   ============================================ */
+
+/* Toolbar container */
+.rbc-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 0;
+}
+
+/* Title (e.g., "March 2026") */
+.rbc-toolbar-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Dark mode title */
+.dark .rbc-toolbar-label {
+    color: #e2e8f0;
+}
+
+/* ---- All toolbar buttons ---- */
+.rbc-toolbar button {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+    box-shadow: none;
+    line-height: 1.5;
+}
+
+.rbc-toolbar button:hover {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #4338ca;
+}
+
+.rbc-toolbar button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+    border-color: #818cf8;
+}
+
+/* Active view button (Month/Week/Day/Agenda) */
+.rbc-toolbar button.rbc-active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.rbc-toolbar button.rbc-active:hover {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+}
+
+/* Button group (navigation: Back Today Next) */
+.rbc-btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.rbc-btn-group button {
+    border-radius: 10px;
+}
+
+/* Dark mode buttons */
+.dark .rbc-toolbar button {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+.dark .rbc-toolbar button:hover {
+    background: #312e81;
+    border-color: #4338ca;
+    color: #c7d2fe;
+}
+
+.dark .rbc-toolbar button.rbc-active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-color: transparent;
+}
+
+/* ---- Calendar Header Row (Mon Tue Wed...) ---- */
+.rbc-header {
+    padding: 10px 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom: 2px solid #f1f5f9 !important;
+    background: #fafbfc;
+}
+
+.dark .rbc-header {
+    color: #94a3b8;
+    border-bottom-color: #1e293b !important;
+    background: #0f172a;
+}
+
+/* ---- Day cells ---- */
+.rbc-month-view,
+.rbc-time-view {
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.rbc-day-bg {
+    border-left: 1px solid #f1f5f9 !important;
+}
+
+.dark .rbc-day-bg {
+    border-left-color: #1e293b !important;
+}
+
+.rbc-month-row + .rbc-month-row {
+    border-top: 1px solid #f1f5f9;
+}
+
+.dark .rbc-month-row + .rbc-month-row {
+    border-top-color: #1e293b;
+}
+
+/* Today cell */
+.rbc-today {
+    background-color: #eef2ff !important;
+}
+
+.dark .rbc-today {
+    background-color: rgba(99, 102, 241, 0.08) !important;
+}
+
+/* Off-range days */
+.rbc-off-range-bg {
+    background: #fafbfc;
+}
+
+.dark .rbc-off-range-bg {
+    background: #0c0f1a;
+}
+
+.rbc-off-range {
+    color: #cbd5e1;
+}
+
+.dark .rbc-off-range {
+    color: #334155;
+}
+
+/* Date cell number */
+.rbc-date-cell {
+    padding: 4px 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+.dark .rbc-date-cell {
+    color: #94a3b8;
+}
+
+/* Events */
+.rbc-event {
+    border-radius: 8px !important;
+    padding: 2px 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 500;
+    border: none !important;
+}
+
+/* Show more link */
+.rbc-show-more {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6366f1;
+    background: transparent;
+}
+
+.rbc-show-more:hover {
+    color: #4338ca;
+}

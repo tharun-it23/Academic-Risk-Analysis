@@ -39,6 +39,10 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>AuthServlet</servlet-name>
+        <url-pattern>/api/auth</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AuthServlet</servlet-name>
         <url-pattern>/api/auth/*</url-pattern>
     </servlet-mapping>
 
@@ -70,4 +74,31 @@
         <url-pattern>/api/students/stats/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Activity Log Servlet -->
+    <servlet>
+        <servlet-name>ActivityLogServlet</servlet-name>
+        <servlet-class>com.academicrisks.servlet.ActivityLogServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ActivityLogServlet</servlet-name>
+        <url-pattern>/api/activity-log</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ActivityLogServlet</servlet-name>
+        <url-pattern>/api/activity-log/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>NotificationServlet</servlet-name>
+        <servlet-class>com.academicrisks.servlet.NotificationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NotificationServlet</servlet-name>
+        <url-pattern>/api/notifications</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>NotificationServlet</servlet-name>
+        <url-pattern>/api/notifications/*</url-pattern>
+    </servlet-mapping>
+ 
 </web-app>

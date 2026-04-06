@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { Button, Modal } from "@heroui/react";
+import { Button, Modal, Label } from "@heroui/react";
 import { Input } from "@heroui/react";
 import { Lock, Check } from 'lucide-react';
+import api from '@/config/api';
 
 interface PasswordChangeModalProps {
     isOpen: boolean;
@@ -29,66 +30,82 @@ export const PasswordChangeModal = ({ isOpen, onOpenChange }: PasswordChangeModa
         }
 
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Password changed");
+        try {
+            await api.post('/auth/change-password', {
+                currentPassword,
+                newPassword
+            });
             setLoading(false);
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
             onClose();
-        }, 1000);
+        } catch (err: any) {
+            setError(err.response?.data?.msg || "Failed to change password. Please check your current password.");
+            setLoading(false);
+        }
     };
 
     return (
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+            <Modal.Backdrop />
             <Modal.Container>
-                {(onClose: () => void) => (
-                    <>
-                        <Modal.Header className="flex flex-col gap-1">Change Password</Modal.Header>
-                        <Modal.Content>
-                            <Input
-                                label="Current Password"
-                                placeholder="Enter current password"
-                                type="password"
-                                value={currentPassword}
-                                onValueChange={setCurrentPassword}
-                                startContent={<Lock size={16} className="text-slate-400" />}
-                            />
-                            <Input
-                                label="New Password"
-                                placeholder="Enter new password"
-                                type="password"
-                                value={newPassword}
-                                onValueChange={setNewPassword}
-                                startContent={<Lock size={16} className="text-slate-400" />}
-                            />
-                            <Input
-                                label="Confirm New Password"
-                                placeholder="Confirm new password"
-                                type="password"
-                                value={confirmPassword}
-                                onValueChange={setConfirmPassword}
-                                errorMessage={error}
-                                isInvalid={!!error}
-                                startContent={<Lock size={16} className="text-slate-400" />}
-                            />
-                        </Modal.Content>
-                        <Modal.Footer>
-                            <Button color="danger" variant="flat" onPress={onClose}>
-                                Cancel
-                            </Button>
-                            <Button
-                                color="primary"
-                                onPress={() => handleSubmit(onClose)}
-                                isLoading={loading}
-                                isDisabled={!currentPassword || !newPassword || !confirmPassword}
-                            >
-                                Update Password
-                            </Button>
-                        </Modal.Footer>
-                    </> 
-                )}
+                <Modal.Dialog>
+                    {({ close }) => (
+                        <>
+                            <Modal.Header className="flex flex-col gap-1">Change Password</Modal.Header>
+                            <Modal.Body>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label>Current Password</Label>
+                                        <Input
+                                            aria-label="Current Password"
+                                            placeholder="Enter current password"
+                                            type="password"
+                                            value={currentPassword}
+                                            onChange={(e) => setCurrentPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>New Password</Label>
+                                        <Input
+                                            aria-label="New Password"
+                                            placeholder="Enter new password"
+                                            type="password"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Confirm New Password</Label>
+                                        <Input
+                                            aria-label="Confirm New Password"
+                                            placeholder="Confirm new password"
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                        />
+                                        {error && (
+                                            <p className="text-sm text-red-500 mt-1">{error}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button variant="ghost" onPress={close}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onPress={() => handleSubmit(close)}
+                                    isPending={loading}
+                                    isDisabled={!currentPassword || !newPassword || !confirmPassword}
+                                >
+                                    Update Password
+                                </Button>
+                            </Modal.Footer>
+                        </> 
+                    )}
+                </Modal.Dialog>
             </Modal.Container>
         </Modal>
     );

@@ -11,6 +11,7 @@ import { Plus, Upload } from 'lucide-react';
 import { useDisclosure } from "@heroui/use-disclosure";
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { BulkUploadModal } from '@/components/BulkUploadModal';
+import { EditStudentModal } from '@/components/EditStudentModal';
 import ExportButton from '@/components/ExportButton';
 
 interface Student {
@@ -36,6 +37,9 @@ export default function AdminStudentsPage() {
     // Modal controls
     const { isOpen: isAddOpen, onOpen: onAddOpen, onOpenChange: onAddOpenChange } = useDisclosure();
     const { isOpen: isUploadOpen, onOpen: onUploadOpen, onOpenChange: onUploadOpenChange } = useDisclosure();
+    const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure();
+
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -85,6 +89,13 @@ export default function AdminStudentsPage() {
     const handleStudentAdded = () => {
         // Refresh list
         console.log("Student added, refreshing...");
+        // Hacky reload for now
+        window.location.reload();
+    };
+
+    const handleEdit = (student: Student) => {
+        setSelectedStudent(student);
+        onEditOpen();
     };
 
     if (authLoading || loading) {
@@ -92,27 +103,39 @@ export default function AdminStudentsPage() {
     }
 
     return (
-        <main className="container mx-auto p-6 space-y-6">
+        <main className="container mx-auto p-4 sm:p-6 space-y-6 max-w-7xl pt-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white">All Students</h1>
-                    <p className="text-slate-600 dark:text-slate-400">Manage student records and risk analysis</p>
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                        <Plus size={24} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">All Students</h1>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Manage student records and risk analysis</p>
+                    </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <ExportButton data={students} filename="Students_List" />
-                    <Button variant="primary" onPress={onUploadOpen}>
-                     <Upload size={18} />   Bulk Upload
-                    </Button>
-                    <Button variant="primary" onPress={onAddOpen}>
-                       <Plus size={18} /> Add Student
-                    </Button>
+                    <button
+                        onClick={onUploadOpen}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-700/40 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:shadow-md transition-all"
+                    >
+                        <Upload size={16} /> Bulk Upload
+                    </button>
+                    <button
+                        onClick={onAddOpen}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:opacity-95 transition-all"
+                    >
+                        <Plus size={16} /> Add Student
+                    </button>
                 </div>
             </div>
 
-            <StudentsTable students={students} isAdmin={true} onDelete={handleDelete} />
+            <StudentsTable students={students} isAdmin={true} onDelete={handleDelete} onEdit={handleEdit} />
 
             <AddStudentModal isOpen={isAddOpen} onOpenChange={onAddOpenChange} onSuccess={handleStudentAdded} />
             <BulkUploadModal isOpen={isUploadOpen} onOpenChange={onUploadOpenChange} onSuccess={handleStudentAdded} />
+            <EditStudentModal isOpen={isEditOpen} onOpenChange={onEditOpenChange} student={selectedStudent} onSuccess={handleStudentAdded} />
         </main>
     );
 }

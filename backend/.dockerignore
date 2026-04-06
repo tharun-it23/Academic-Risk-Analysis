@@ -1,0 +1,17 @@
+# Ignore Maven build files
+target/maven-archiver/
+target/classes/
+target/generated-sources/
+target/test-classes/
+
+# Ignore local source code (not needed since we copy the built JAR)
+src/
+pom.xml
+
+# Ignore version control
+.git
+.gitignore
+
+# Ignore logs
+logs/
+*.log
