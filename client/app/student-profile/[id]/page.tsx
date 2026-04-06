@@ -105,9 +105,8 @@ export default function StudentProfilePage() {
                         <h2 className="text-xl font-bold">{student.name}</h2>
                         <p className="text-slate-500">{student.rollNo}</p>
                         <Chip
-                            className="mt-3 capitalize"
-                            color={student.riskStatus === 'High' ? 'danger' : student.riskStatus === 'Medium' ? 'warning' : 'success'}
-                            variant="secondary"
+                            className={student.riskStatus === 'High' ? "mt-3 capitalize bg-red-100 text-red-700 font-semibold" : student.riskStatus === 'Medium' ? "mt-3 capitalize bg-amber-100 text-amber-700 font-semibold" : "mt-3 capitalize bg-emerald-100 text-emerald-700 font-semibold"}
+                            variant="soft"
                         >
                             {student.riskStatus} Risk
                         </Chip>

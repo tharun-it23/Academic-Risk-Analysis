@@ -112,7 +112,7 @@ export const BulkUploadModal = ({ isOpen, onOpenChange, onSuccess }: BulkUploadM
                                 </div>
 
                                 <div className="flex justify-end">
-                                    <Button size="sm" variant="ghost" onPress={downloadTemplate}>
+                                    <Button variant="ghost" onPress={downloadTemplate}>
                                         <FileDown size={16} />  Download Template
                                     </Button>
                                 </div>

@@ -140,16 +140,16 @@ const StudentsTable = ({ students, isAdmin = false, onDelete, onEdit }: Students
                                     <Table.Cell>{item.academics?.gpa}</Table.Cell>
                                     <Table.Cell>{item.academics?.attendance}%</Table.Cell>
                                     <Table.Cell>
-                                        <Chip className="capitalize" variant="soft" color={statusColorMap[item.riskStatus]}>
+                                        <Chip 
+                                            className={item.riskStatus === 'High' ? "bg-red-100 text-red-700" : item.riskStatus === 'Medium' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"} 
+                                            variant="soft"
+                                        >
                                             {item.riskStatus}
                                         </Chip>
                                     </Table.Cell>
                                     <Table.Cell>
                                         <Button
-                                            isIconOnly
-                                            size="sm"
-                                            variant="flat"
-                                            color="primary"
+                                            variant="primary"
                                             isDisabled={!item.phone}
                                             onPress={() => item.phone && window.open(`sms:${item.phone}?body=Academic Alert: You have been identified with a ${item.riskStatus} risk status. Please contact your mentor immediately.`)}
                                             aria-label="Send SMS Alert"
@@ -159,15 +159,15 @@ const StudentsTable = ({ students, isAdmin = false, onDelete, onEdit }: Students
                                     </Table.Cell>
                                     <Table.Cell>
                                         <div className="flex items-center gap-2">
-                                            <Button isIconOnly size="sm" variant="ghost" onPress={() => router.push(`/student-profile/${item._id}`)} aria-label="View Profile">
+                                            <Button variant="ghost" onPress={() => router.push(`/student-profile/${item._id}`)} aria-label="View Profile">
                                                 <Eye size={18} className="text-slate-500" />
                                             </Button>
                                             {isAdmin && (
                                                 <>
-                                                    <Button isIconOnly size="sm" variant="ghost" onPress={() => onEdit && onEdit(item)} aria-label="Edit Student">
+                                                    <Button variant="ghost" onPress={() => onEdit && onEdit(item)} aria-label="Edit Student">
                                                         <Edit size={18} />
                                                     </Button>
-                                                    <Button isIconOnly size="sm" variant="danger" onPress={() => onDelete && onDelete(item._id)} aria-label="Delete Student">
+                                                    <Button variant="danger" onPress={() => onDelete && onDelete(item._id)} aria-label="Delete Student">
                                                         <Trash2 size={18} />
                                                     </Button>
                                                 </>
