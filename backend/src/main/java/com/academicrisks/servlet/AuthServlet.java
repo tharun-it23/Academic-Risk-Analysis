@@ -6,13 +6,18 @@ import com.academicrisks.model.User;
 import com.academicrisks.util.JsonUtil;
 import com.academicrisks.util.JwtUtil;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @WebServlet(urlPatterns = {"/api/auth", "/api/auth/*"})
 public class AuthServlet extends HttpServlet {
@@ -30,6 +35,8 @@ public class AuthServlet extends HttpServlet {
             handleLogin(request, response);
         } else if (pathInfo != null && pathInfo.equals("/register")) {
             handleRegister(request, response);
+        } else if (pathInfo != null && pathInfo.equals("/google")) {
+            handleGoogleLogin(request, response);
         } else if (pathInfo != null && pathInfo.equals("/change-password")) {
             handleChangePassword(request, response);
         } else {
@@ -176,6 +183,68 @@ public class AuthServlet extends HttpServlet {
 
             // Log the login activity
             activityLogDAO.log("login", user.getName() + " (" + user.getRole() + ") logged in", user.getName());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error");
+        }
+    }
+    private void handleGoogleLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            String body = JsonUtil.readRequestBody(request);
+            JsonObject json = JsonUtil.getGson().fromJson(body, JsonObject.class);
+
+            String credential = json.has("credential") ? json.get("credential").getAsString() : null;
+            if (credential == null || credential.isEmpty()) {
+                System.out.println("[AUTH] Google login failed: Missing Google credential in request");
+                JsonUtil.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Missing Google credential");
+                return;
+            }
+
+            // --- LOCAL JWT DECODING TO AVOID PROXY/NETWORK ERRORS ---
+            String[] parts = credential.split("\\.");
+            if (parts.length != 3) {
+                System.out.println("[AUTH] Google login failed: Invalid JWT token format");
+                JsonUtil.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT format");
+                return;
+            }
+
+            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]), "UTF-8");
+            JsonObject tokenInfo = com.google.gson.JsonParser.parseString(payloadJson).getAsJsonObject();
+            String email = tokenInfo.has("email") ? tokenInfo.get("email").getAsString() : null;
+            String googleName = tokenInfo.has("name") ? tokenInfo.get("name").getAsString() : null;
+            String emailVerified = tokenInfo.has("email_verified") ? tokenInfo.get("email_verified").getAsString() : "false";
+
+            if (email == null || !"true".equals(emailVerified)) {
+                System.out.println("[AUTH] Google login failed: Email not verified or missing. Email: " + email + ", Verified: " + emailVerified);
+                JsonUtil.sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Google email not verified");
+                return;
+            }
+
+            // Find or create user
+            System.out.println("[AUTH] Google token verified. Finding/creating user for email: " + email);
+            User user = userDAO.findOrCreateGoogleUser(email, googleName);
+            if (user == null) {
+                JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to resolve user");
+                return;
+            }
+
+            // Generate JWT
+            String token = JwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
+
+            JsonObject userObj = new JsonObject();
+            userObj.addProperty("id", String.valueOf(user.getId()));
+            userObj.addProperty("username", user.getUsername());
+            userObj.addProperty("role", user.getRole());
+            userObj.addProperty("name", user.getName());
+            userObj.addProperty("email", email);
+
+            JsonObject result = new JsonObject();
+            result.addProperty("token", token);
+            result.add("user", userObj);
+
+            JsonUtil.sendJson(response, result);
+            activityLogDAO.log("login", user.getName() + " (" + user.getRole() + ") logged in via Google", user.getName());
 
         } catch (Exception e) {
             e.printStackTrace();

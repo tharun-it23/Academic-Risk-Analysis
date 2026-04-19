@@ -50,9 +50,18 @@ public class DatabaseInitializer implements ServletContextListener {
                     "  username TEXT UNIQUE NOT NULL," +
                     "  password TEXT NOT NULL," +
                     "  role TEXT NOT NULL," +
-                    "  name TEXT" +
+                    "  name TEXT," +
+                    "  email TEXT" +
                     ")"
                 );
+
+                // Migrate: add email column if it doesn't exist yet
+                try {
+                    stmt.execute("ALTER TABLE users ADD COLUMN email TEXT");
+                    System.out.println("[DB] Migrated: added email column to users");
+                } catch (Exception ignored) {
+                    // Column already exists — safe to ignore
+                }
 
                 // Create students table
                 stmt.execute(
@@ -102,6 +111,9 @@ public class DatabaseInitializer implements ServletContextListener {
                 }
                 rs.close();
 
+                // Always ensure emails are set (handles pre-existing DB without emails)
+                ensureUserEmails(stmt);
+
                 // Seed sample students (only if table is empty)
                 rs = stmt.executeQuery("SELECT COUNT(*) FROM students");
                 if (rs.next() && rs.getInt(1) == 0) {
@@ -118,23 +130,47 @@ public class DatabaseInitializer implements ServletContextListener {
     }
 
     private void seedUsers(Statement stmt) throws Exception {
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('admin', 'admin123', 'admin', 'Administrator')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('faculty1', 'faculty123', 'faculty', 'Dr. Smith')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('faculty2', 'faculty123', 'faculty', 'Prof. Johnson')");
-        // Student accounts — username = roll number (lowercase)
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CSE001', 'student123', 'student', 'John Doe')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CSE002', 'student123', 'student', 'Jane Smith')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21ECE001', 'student123', 'student', 'Bob Johnson')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21ECE002', 'student123', 'student', 'Alice Brown')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21MECH001', 'student123', 'student', 'Charlie Wilson')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21MECH002', 'student123', 'student', 'Diana Lee')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CIVIL001', 'student123', 'student', 'Eve Davis')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21EEE001', 'student123', 'student', 'Frank Miller')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21IT001', 'student123', 'student', 'Grace Taylor')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21CSE003', 'student123', 'student', 'Henry Anderson')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21ECE003', 'student123', 'student', 'Ivy Thomas')");
-        stmt.execute("INSERT INTO users (username, password, role, name) VALUES ('21MECH003', 'student123', 'student', 'Jack White')");
-        System.out.println("[DB] Seeded default users");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('admin', 'admin123', 'admin', 'Administrator', 'admin@academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('faculty1', 'faculty123', 'faculty', 'Dr. Smith', 'dr.smith@academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('faculty2', 'faculty123', 'faculty', 'Prof. Johnson', 'prof.johnson@academicrisks.edu')");
+        // Student accounts — username = roll number
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21CSE001', 'student123', 'student', 'John Doe', 'john.doe@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21CSE002', 'student123', 'student', 'Jane Smith', 'jane.smith@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21ECE001', 'student123', 'student', 'Bob Johnson', 'bob.johnson@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21ECE002', 'student123', 'student', 'Alice Brown', 'alice.brown@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21MECH001', 'student123', 'student', 'Charlie Wilson', 'charlie.wilson@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21MECH002', 'student123', 'student', 'Diana Lee', 'diana.lee@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21CIVIL001', 'student123', 'student', 'Eve Davis', 'eve.davis@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21EEE001', 'student123', 'student', 'Frank Miller', 'frank.miller@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21IT001', 'student123', 'student', 'Grace Taylor', 'grace.taylor@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21CSE003', 'student123', 'student', 'Henry Anderson', 'henry.anderson@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21ECE003', 'student123', 'student', 'Ivy Thomas', 'ivy.thomas@student.academicrisks.edu')");
+        stmt.execute("INSERT INTO users (username, password, role, name, email) VALUES ('21MECH003', 'student123', 'student', 'Jack White', 'jack.white@student.academicrisks.edu')");
+        System.out.println("[DB] Seeded default users with emails");
+    }
+
+    private void ensureUserEmails(Statement stmt) throws Exception {
+        Object[][] emailMap = {
+            {"admin",      "admin@academicrisks.edu"},
+            {"faculty1",   "dr.smith@academicrisks.edu"},
+            {"faculty2",   "prof.johnson@academicrisks.edu"},
+            {"21CSE001",   "john.doe@student.academicrisks.edu"},
+            {"21CSE002",   "jane.smith@student.academicrisks.edu"},
+            {"21CSE003",   "henry.anderson@student.academicrisks.edu"},
+            {"21ECE001",   "bob.johnson@student.academicrisks.edu"},
+            {"21ECE002",   "alice.brown@student.academicrisks.edu"},
+            {"21ECE003",   "ivy.thomas@student.academicrisks.edu"},
+            {"21MECH001",  "charlie.wilson@student.academicrisks.edu"},
+            {"21MECH002",  "diana.lee@student.academicrisks.edu"},
+            {"21MECH003",  "jack.white@student.academicrisks.edu"},
+            {"21CIVIL001", "eve.davis@student.academicrisks.edu"},
+            {"21EEE001",   "frank.miller@student.academicrisks.edu"},
+            {"21IT001",    "grace.taylor@student.academicrisks.edu"},
+        };
+        for (Object[] entry : emailMap) {
+            stmt.execute("UPDATE users SET email = '" + entry[1] + "' WHERE username = '" + entry[0] + "' AND (email IS NULL OR email = '' OR email NOT LIKE '%@%')");
+        }
+        System.out.println("[DB] User emails ensured");
     }
 
     private void seedStudents(Statement stmt) throws Exception {

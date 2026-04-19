@@ -9,6 +9,7 @@ interface User {
     username: string;
     role: 'admin' | 'faculty' | 'student';
     name?: string;
+    email?: string;
     [key: string]: any;
 }
 
@@ -16,6 +17,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (username: string, password: string) => Promise<{ success: boolean; role?: string; msg?: string }>;
+    googleLogin: (credential: string) => Promise<{ success: boolean; role?: string; msg?: string }>;
     register: (username: string, password: string, name?: string) => Promise<{ success: boolean; msg?: string }>;
     logout: () => void;
 }
@@ -54,10 +56,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const googleLogin = async (credential: string) => {
+        try {
+            const res = await api.post('/auth/google', { credential });
+            localStorage.setItem('token', res.data.token);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+            setUser(res.data.user);
+            return { success: true, role: res.data.user.role };
+        } catch (err: any) {
+            return { success: false, msg: err.response?.data?.msg || 'Google login failed' };
+        }
+    };
+
     const register = async (username: string, password: string, name?: string) => {
         try {
             await api.post('/auth/register', { username, password, name });
-            return await login(username, password); // Auto-login after successful registration
+            return await login(username, password);
         } catch (err: any) {
             return { success: false, msg: err.response?.data?.msg || 'Registration failed' };
         }
@@ -71,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, googleLogin, register, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );
