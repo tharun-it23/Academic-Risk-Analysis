@@ -123,7 +123,7 @@ export default function StudentPerformancePage() {
                             <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis yAxisId="left" stroke="#94a3b8" fontSize={12} domain={[0, 10]} tickLine={false} axisLine={false} />
                             <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={12} domain={[0, 100]} tickLine={false} axisLine={false} />
-                            <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', fontSize: '13px' }} />
+                            <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: 'none', fontSize: '13px' }} />
                             <Line yAxisId="left" type="monotone" dataKey="cgpa" stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, fill: '#6366f1' }} name="GPA" />
                             <Line yAxisId="right" type="monotone" dataKey="attendance" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, fill: '#10b981' }} name="Attendance %" />
                         </LineChart>

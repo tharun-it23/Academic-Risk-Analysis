@@ -113,7 +113,7 @@ const MonthlyRiskAnalytics = () => {
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', fontSize: '13px' }} />
+                                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: 'none', fontSize: '13px' }} />
                                 <Legend />
                                 <Bar dataKey="highRisk" name="High Risk" fill="#ef4444" radius={[6, 6, 0, 0]} />
                                 <Bar dataKey="mediumRisk" name="Medium Risk" fill="#f59e0b" radius={[6, 6, 0, 0]} />

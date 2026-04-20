@@ -6,6 +6,7 @@ import {
     BarChart2,
     Lightbulb,
     MessageSquare,
+    ClipboardCheck,
 } from 'lucide-react';
 
 export default function StudentLayout({
@@ -16,6 +17,7 @@ export default function StudentLayout({
 
     const menuItems = [
         { icon: <Home size={18} />, label: 'Dashboard', path: '/student' },
+        { icon: <ClipboardCheck size={18} />, label: 'Progress', path: '/student/progress' },
         { icon: <BarChart2 size={18} />, label: 'Performance', path: '/student/performance' },
         { icon: <Lightbulb size={18} />, label: 'Recommendations', path: '/student/recommendations' },
         { icon: <MessageSquare size={18} />, label: 'Feedback', path: '/student/feedback' },

@@ -52,7 +52,7 @@ const DepartmentComparisonWidget = ({ departmentStats }: DepartmentComparisonWid
                                     backgroundColor: 'white',
                                     border: '1px solid #e2e8f0',
                                     borderRadius: '12px',
-                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                    boxShadow: 'none',
                                     fontSize: '13px'
                                 }}
                             />

@@ -8,6 +8,7 @@ import StudentsTable from '@/components/StudentsTable';
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { BulkUploadModal } from '@/components/BulkUploadModal';
 import { EditStudentModal } from '@/components/EditStudentModal';
+import { AddMarksModal } from '@/components/AddMarksModal';
 import ExportButton from '@/components/ExportButton';
 import { useDisclosure } from '@heroui/use-disclosure';
 import { Spinner } from '@heroui/react';
@@ -52,6 +53,7 @@ export default function FacultyStudentsPage() {
     const { isOpen: isAddOpen, onOpen: onAddOpen, onOpenChange: onAddOpenChange } = useDisclosure();
     const { isOpen: isUploadOpen, onOpen: onUploadOpen, onOpenChange: onUploadOpenChange } = useDisclosure();
     const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure();
+    const { isOpen: isMarksOpen, onOpen: onMarksOpen, onOpenChange: onMarksOpenChange } = useDisclosure();
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -93,6 +95,11 @@ export default function FacultyStudentsPage() {
     const handleEdit = (student: Student) => {
         setSelectedStudent(student);
         onEditOpen();
+    };
+
+    const handleAddMarks = (student: Student) => {
+        setSelectedStudent(student);
+        onMarksOpen();
     };
 
     if (authLoading || loading) {
@@ -215,7 +222,7 @@ export default function FacultyStudentsPage() {
             <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                     <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                        Student List
+                        👨‍🎓 My Students
                         <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] text-slate-500 dark:text-slate-400 font-bold">
                             {students.length} TOTAL
                         </span>
@@ -226,6 +233,7 @@ export default function FacultyStudentsPage() {
                     isAdmin={true}
                     onDelete={handleDelete}
                     onEdit={handleEdit}
+                    onAddMarks={handleAddMarks}
                 />
             </div>
 
@@ -233,6 +241,7 @@ export default function FacultyStudentsPage() {
             <AddStudentModal isOpen={isAddOpen} onOpenChange={onAddOpenChange} onSuccess={handleStudentAdded} />
             <BulkUploadModal isOpen={isUploadOpen} onOpenChange={onUploadOpenChange} onSuccess={handleStudentAdded} />
             <EditStudentModal isOpen={isEditOpen} onOpenChange={onEditOpenChange} student={selectedStudent} onSuccess={handleStudentAdded} />
+            <AddMarksModal isOpen={isMarksOpen} onOpenChange={onMarksOpenChange} student={selectedStudent} onSuccess={handleStudentAdded} />
         </div>
     );
 }

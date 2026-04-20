@@ -9,7 +9,7 @@ import {
     Button,
     Input,
 } from "@heroui/react";
-import { Search, AlertTriangle, Eye, Edit, Trash2, ChevronDown, MessageSquare } from 'lucide-react';
+import { Search, AlertTriangle, Eye, Edit, Trash2, ChevronDown, MessageSquare, BookOpen } from 'lucide-react';
 
 interface Student {
     _id: string;
@@ -30,6 +30,7 @@ interface StudentsTableProps {
     isAdmin?: boolean;
     onDelete?: (id: string) => void;
     onEdit?: (student: Student) => void;
+    onAddMarks?: (student: Student) => void;
 }
 
 const statusColorMap: Record<string, "danger" | "warning" | "success"> = {
@@ -38,7 +39,7 @@ const statusColorMap: Record<string, "danger" | "warning" | "success"> = {
     Low: "success",
 };
 
-const StudentsTable = ({ students, isAdmin = false, onDelete, onEdit }: StudentsTableProps) => {
+const StudentsTable = ({ students, isAdmin = false, onDelete, onEdit, onAddMarks }: StudentsTableProps) => {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDepartment, setFilterDepartment] = useState('');
@@ -164,6 +165,9 @@ const StudentsTable = ({ students, isAdmin = false, onDelete, onEdit }: Students
                                             </Button>
                                             {isAdmin && (
                                                 <>
+                                                    <Button variant="ghost" onPress={() => onAddMarks && onAddMarks(item)} aria-label="Add Marks">
+                                                        <BookOpen size={18} className="text-indigo-500" />
+                                                    </Button>
                                                     <Button variant="ghost" onPress={() => onEdit && onEdit(item)} aria-label="Edit Student">
                                                         <Edit size={18} />
                                                     </Button>

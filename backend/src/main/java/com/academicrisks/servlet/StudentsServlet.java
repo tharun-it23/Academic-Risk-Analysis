@@ -2,7 +2,10 @@ package com.academicrisks.servlet;
 
 import com.academicrisks.dao.ActivityLogDAO;
 import com.academicrisks.dao.StudentDAO;
+import com.academicrisks.dao.AcademicProfileDAO;
+import com.academicrisks.dao.UserDAO;
 import com.academicrisks.model.Student;
+import com.academicrisks.model.User;
 import com.academicrisks.util.JsonUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -22,6 +25,7 @@ public class StudentsServlet extends HttpServlet {
 
     private StudentDAO studentDAO = new StudentDAO();
     private ActivityLogDAO activityLogDAO = new ActivityLogDAO();
+    private AcademicProfileDAO academicProfileDAO = new AcademicProfileDAO();
 
     private String getUserName(HttpServletRequest request) {
         String name = (String) request.getAttribute("username");
@@ -36,7 +40,7 @@ public class StudentsServlet extends HttpServlet {
 
         if (pathInfo == null || pathInfo.equals("/")) {
             // GET /api/students - list all
-            handleGetAll(response);
+            handleGetAll(request, response);
         } else {
             // Check if this is meant for stats servlet (shouldn't reach here due to web.xml mapping)
             // ID is provided
@@ -60,6 +64,8 @@ public class StudentsServlet extends HttpServlet {
 
         if (pathInfo != null && pathInfo.equals("/bulk")) {
             handleBulkCreate(request, response);
+        } else if (pathInfo != null && pathInfo.matches("^/\\d+/marks$")) {
+            handleAddMarks(request, response);
         } else {
             handleCreate(request, response);
         }
@@ -128,8 +134,22 @@ public class StudentsServlet extends HttpServlet {
         }
     }
 
-    private void handleGetAll(HttpServletResponse response) throws IOException {
-        List<Student> students = studentDAO.findAll();
+    private void handleGetAll(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String role = (String) request.getAttribute("userRole");
+        Integer userId = (Integer) request.getAttribute("userId");
+        
+        List<Student> students;
+        if ("faculty".equals(role) && userId != null) {
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findById(userId);
+            if (user != null && user.getDepartment() != null && !user.getDepartment().isEmpty()) {
+                students = studentDAO.findAllByDepartment(user.getDepartment());
+            } else {
+                students = studentDAO.findAll();
+            }
+        } else {
+            students = studentDAO.findAll();
+        }
 
         // Transform to match frontend expectations with _id and nested academics
         JsonArray result = new JsonArray();
@@ -219,6 +239,31 @@ public class StudentsServlet extends HttpServlet {
         }
     }
 
+    private void handleAddMarks(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String pathInfo = request.getPathInfo();
+        String idStr = pathInfo.split("/")[1];
+        try {
+            int studentId = Integer.parseInt(idStr);
+            String body = JsonUtil.readRequestBody(request);
+            JsonObject json = JsonUtil.getGson().fromJson(body, JsonObject.class);
+            
+            boolean success = academicProfileDAO.addInternalMarks(studentId, json);
+            if (success) {
+                Student student = studentDAO.findById(studentId);
+                activityLogDAO.log("update", "Added internal marks for: " + (student != null ? student.getName() : "ID " + studentId), getUserName(request));
+                JsonObject result = new JsonObject();
+                result.addProperty("msg", "Marks added successfully");
+                JsonUtil.sendJson(response, result);
+            } else {
+                JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to add marks");
+            }
+        } catch (NumberFormatException e) {
+            JsonUtil.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid student ID");
+        } catch (Exception e) {
+            JsonUtil.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid request: " + e.getMessage());
+        }
+    }
+
     /**
      * Convert Student model to JSON matching frontend expectations:
      * - _id instead of id
@@ -240,15 +285,21 @@ public class StudentsServlet extends HttpServlet {
 
         // Nested academics object for faculty and admin pages
         JsonObject academics = new JsonObject();
-        academics.addProperty("gpa", s.getGpa());
-        academics.addProperty("cgpa", s.getGpa()); // alias for student profile page
+        academics.addProperty("gpa", s.getCgpa());
+        academics.addProperty("cgpa", s.getCgpa()); // alias for student profile page
         academics.addProperty("attendance", s.getAttendance());
-        academics.addProperty("backlogs", s.getBacklogs());
+        academics.addProperty("backlogs", s.getArrearCount());
         obj.add("academics", academics);
 
         // Also expose flat fields for admin dashboard compatibility
-        obj.addProperty("cgpa", s.getGpa());
+        obj.addProperty("cgpa", s.getCgpa());
         obj.addProperty("attendance", s.getAttendance());
+
+        // Inject deep academic profile for detailed dashboard views
+        JsonObject deepProfile = academicProfileDAO.getFullStudentProfile(s.getId());
+        for (String key : deepProfile.keySet()) {
+            obj.add(key, deepProfile.get(key));
+        }
 
         return obj;
     }
@@ -273,9 +324,9 @@ public class StudentsServlet extends HttpServlet {
 
         if (json.has("semester") && !json.get("semester").getAsString().isEmpty()) s.setSemester(json.get("semester").getAsInt());
 
-        if (json.has("gpa") && !json.get("gpa").getAsString().isEmpty()) s.setGpa(json.get("gpa").getAsDouble());
-        if (json.has("GPA") && !json.get("GPA").getAsString().isEmpty()) s.setGpa(json.get("GPA").getAsDouble());
-        if (json.has("cgpa") && !json.get("cgpa").getAsString().isEmpty()) s.setGpa(json.get("cgpa").getAsDouble());
+        if (json.has("gpa") && !json.get("gpa").getAsString().isEmpty()) s.setCgpa(json.get("gpa").getAsDouble());
+        if (json.has("GPA") && !json.get("GPA").getAsString().isEmpty()) s.setCgpa(json.get("GPA").getAsDouble());
+        if (json.has("cgpa") && !json.get("cgpa").getAsString().isEmpty()) s.setCgpa(json.get("cgpa").getAsDouble());
 
         if (json.has("attendance") && !json.get("attendance").getAsString().isEmpty()) s.setAttendance(json.get("attendance").getAsDouble());
         if (json.has("Attendance") && !json.get("Attendance").getAsString().isEmpty()) s.setAttendance(json.get("Attendance").getAsDouble());
@@ -290,7 +341,7 @@ public class StudentsServlet extends HttpServlet {
 
         if (json.has("address") && !json.get("address").getAsString().isEmpty()) s.setAddress(json.get("address").getAsString());
 
-        if (json.has("backlogs") && !json.get("backlogs").getAsString().isEmpty()) s.setBacklogs(json.get("backlogs").getAsInt());
+        if (json.has("backlogs") && !json.get("backlogs").getAsString().isEmpty()) s.setArrearCount(json.get("backlogs").getAsInt());
 
         return s;
     }

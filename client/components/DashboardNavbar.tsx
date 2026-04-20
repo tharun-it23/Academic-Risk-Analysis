@@ -64,7 +64,7 @@ export const DashboardNavbar = ({ title, menuItems = [], children }: DashboardNa
                 <div className="h-[60px] flex items-center px-5 shrink-0" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
                     <div className="flex items-center gap-3 w-full">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md flex-shrink-0"
-                            style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                            style={{ background: '#e5e5e5' }}>
                             <span className="text-white text-xs font-bold">{title.charAt(0)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -124,7 +124,7 @@ export const DashboardNavbar = ({ title, menuItems = [], children }: DashboardNa
                     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1"
                         style={{ background: 'rgba(79, 70, 229, 0.05)' }}>
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                            style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                            style={{ background: '#e5e5e5' }}>
                             {initials}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -168,7 +168,7 @@ export const DashboardNavbar = ({ title, menuItems = [], children }: DashboardNa
                         />
                         <NavbarBrand className="gap-2">
                             <div className="w-7 h-7 rounded-md flex items-center justify-center"
-                                style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                                style={{ background: '#e5e5e5' }}>
                                 <span className="text-white text-xs font-bold">{title.charAt(0)}</span>
                             </div>
                             <p className="font-semibold text-sm text-slate-800 dark:text-white truncate max-w-[140px]">{title}</p>
@@ -194,7 +194,7 @@ export const DashboardNavbar = ({ title, menuItems = [], children }: DashboardNa
                                 <Dropdown.Trigger className="outline-none cursor-pointer">
                                     <div className="flex items-center gap-2.5 pl-1">
                                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                            style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                                            style={{ background: '#e5e5e5' }}>
                                             {initials}
                                         </div>
                                         <div className="hidden sm:flex flex-col items-start max-w-[120px]">

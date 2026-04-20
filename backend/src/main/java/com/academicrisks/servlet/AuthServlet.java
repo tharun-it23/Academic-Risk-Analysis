@@ -174,6 +174,7 @@ public class AuthServlet extends HttpServlet {
             userObj.addProperty("username", user.getUsername());
             userObj.addProperty("role", user.getRole());
             userObj.addProperty("name", user.getName());
+            userObj.addProperty("department", user.getDepartment());
 
             JsonObject result = new JsonObject();
             result.addProperty("token", token);
@@ -238,6 +239,7 @@ public class AuthServlet extends HttpServlet {
             userObj.addProperty("role", user.getRole());
             userObj.addProperty("name", user.getName());
             userObj.addProperty("email", email);
+            userObj.addProperty("department", user.getDepartment());
 
             JsonObject result = new JsonObject();
             result.addProperty("token", token);

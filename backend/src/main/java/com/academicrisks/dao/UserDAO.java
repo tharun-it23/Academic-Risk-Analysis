@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 public class UserDAO {
 
     public User findByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
+        String sql = "SELECT * FROM users WHERE LOWER(username) = LOWER(?)";
         try (Connection conn = DatabaseInitializer.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
@@ -21,6 +21,7 @@ public class UserDAO {
                 user.setPassword(rs.getString("password"));
                 user.setRole(rs.getString("role"));
                 user.setName(rs.getString("name"));
+                user.setDepartment(rs.getString("department"));
                 return user;
             }
         } catch (Exception e) {
@@ -42,6 +43,7 @@ public class UserDAO {
                 user.setPassword(rs.getString("password"));
                 user.setRole(rs.getString("role"));
                 user.setName(rs.getString("name"));
+                user.setDepartment(rs.getString("department"));
                 return user;
             }
         } catch (Exception e) {
@@ -64,6 +66,7 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setName(rs.getString("name"));
                 user.setEmail(rs.getString("email"));
+                user.setDepartment(rs.getString("department"));
                 return user;
             }
         } catch (Exception e) {

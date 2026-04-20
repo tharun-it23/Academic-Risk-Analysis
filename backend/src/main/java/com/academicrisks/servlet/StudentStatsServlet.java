@@ -1,6 +1,8 @@
 package com.academicrisks.servlet;
 
 import com.academicrisks.dao.StudentDAO;
+import com.academicrisks.dao.UserDAO;
+import com.academicrisks.model.User;
 import com.academicrisks.util.JsonUtil;
 
 import javax.servlet.ServletException;
@@ -25,12 +27,27 @@ public class StudentStatsServlet extends HttpServlet {
         if (pathInfo != null && pathInfo.equals("/monthly")) {
             handleMonthlyStats(request, response);
         } else {
-            handleOverallStats(response);
+            handleOverallStats(request, response);
         }
     }
 
-    private void handleOverallStats(HttpServletResponse response) throws IOException {
-        Map<String, Object> stats = studentDAO.getStats();
+    private void handleOverallStats(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String role = (String) request.getAttribute("userRole");
+        Integer userId = (Integer) request.getAttribute("userId");
+        
+        Map<String, Object> stats;
+        if ("faculty".equals(role) && userId != null) {
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findById(userId);
+            if (user != null && user.getDepartment() != null && !user.getDepartment().isEmpty()) {
+                stats = studentDAO.getStatsByDepartment(user.getDepartment());
+            } else {
+                stats = studentDAO.getStats();
+            }
+        } else {
+            stats = studentDAO.getStats();
+        }
+        
         JsonUtil.sendJson(response, stats);
     }
 

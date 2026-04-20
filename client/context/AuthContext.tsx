@@ -10,6 +10,7 @@ interface User {
     role: 'admin' | 'faculty' | 'student';
     name?: string;
     email?: string;
+    department?: string;
     [key: string]: any;
 }
 
